@@ -34,7 +34,7 @@ Here’s an example workflow:
 
 1. You have the following files in your project:
 
-   ```
+   ```.env
    .env.dev
    .env.prod
    .env.test
