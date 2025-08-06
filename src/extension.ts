@@ -1,26 +1,62 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import I18n, { setupI18n } from './translations';
+import { getEnvFiles } from './envWatcher';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	setupI18n(context);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "envtoggler" is now active!');
+	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+	statusBar.command = 'envToggler.selectEnv';
+	context.subscriptions.push(statusBar);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('envtoggler.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from EnvToggler!');
+	const updateStatusBar = (envFileName: string | undefined) => {
+		statusBar.text = I18n.__('statusBar.text', { env: envFileName ?? 'None' });
+		statusBar.show();
+	};
+
+	const command = vscode.commands.registerCommand('envToggler.selectEnv', async () => {
+		const envFiles = await getEnvFiles();
+		if (envFiles.length === 0) {
+			vscode.window.showWarningMessage(I18n.__('messages.noEnvFiles'));
+			return;
+		}
+
+		const selectedFile = await vscode.window.showQuickPick(
+			envFiles.map(file => path.basename(file.fsPath)),
+			{ placeHolder: I18n.__('messages.selectEnv.placeholder') }
+		);
+
+		if (!selectedFile) {
+			return;
+		}
+
+		const workspaceFolder = vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+		if (!workspaceFolder) {
+			vscode.window.showErrorMessage(I18n.__('messages.noWorkspace'));
+			return;
+		}
+
+		const fromPath = path.join(workspaceFolder, selectedFile);
+		const toPath = path.join(workspaceFolder, '.env');
+
+		try {
+			fs.copyFileSync(fromPath, toPath);
+			vscode.window.showInformationMessage(I18n.__('messages.fileCopied', selectedFile));
+			updateStatusBar(selectedFile);
+		} catch (err: any) {
+			vscode.window.showErrorMessage(I18n.__('messages.fileCopyFailed', selectedFile, err.message));
+		}
 	});
 
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(command);
+
+	getEnvFiles().then(files => {
+		const exists = fs.existsSync(path.join(vscode.workspace.workspaceFolders?.[0].uri.fsPath || '', '.env'));
+		const activeName = exists ? '.env' : undefined;
+		updateStatusBar(activeName);
+	});
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() { }

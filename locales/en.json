@@ -1,0 +1,14 @@
+{
+	"messages": {
+		"noEnvFiles": "No environment files found.",
+		"selectEnv": {
+			"placeholder": "Select an environment file..."
+		},
+		"noWorkspace": "No workspace is open. Please open a workspace to use the extension.",
+		"fileCopied": ".env replaced with {{file}}",
+		"fileCopyFailed": "Failed to copy {{file}}: {{error}}"
+	},
+	"statusBar": {
+		"text": "Environment: {{env}}"
+	}
+}
