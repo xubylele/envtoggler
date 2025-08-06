@@ -3,6 +3,7 @@
   "displayName": "EnvToggler",
   "description": "EnvToggler is a Visual Studio Code extension that allows you to switch between multiple .env environment configuration files directly from the status bar. It simplifies the process of managing different environments like development, testing, and production by providing a quick and intuitive way to activate the desired environment.",
   "version": "0.0.1",
+  "publisher": "Xubylele",
   "engines": {
     "vscode": "^1.102.0"
   },
